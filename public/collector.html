@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ScrapSetu — From E-Waste to a Greener Future</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+
+<style>
+  :root{
+    --bg: white;
+    --panel: #f5f5f5;
+    --panel-hi:  #EDF3EC;
+    --ink: #111827;
+    --ink-soft: #4B5563;
+    --forest: #15803D;
+    --forest-deep: #F2FAEC;
+    --copper: #4ADE60;
+    --copper-light: #7BEE8C;
+    --line: #E5E7EB;
+    --green: #15803D;
+    --good: #4ADE60;
+    --radius-panel: 8px;
+    --radius-pill: 999px;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+    background-image:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(74,222,96,0.08), transparent 60%);
+  }
+  h1,h2,h3{
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    margin: 0 0 8px 0;
+    color: var(--ink);
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+  }
+  a{ color: var(--forest); }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 0 40px;
+    height: 64px;
+    background: green;
+    box-shadow: 0 2px 18px rgba(0,0,0,0.5);
+    position: sticky; top:0; z-index: 20;
+    gap: 16px;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-name{
+    font-family:'Anton', sans-serif;
+    font-weight:400;
+    font-size: 24px;
+    letter-spacing: 0.03em;
+    color: #0A1B0C;
+    text-transform: uppercase;
+  }
+  nav{ display:flex; gap:28px; }
+  nav a{
+    text-decoration:none;
+    color: #0A2A10;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing:0.03em;
+    text-transform: uppercase;
+    border-bottom: 2px solid transparent;
+    padding-bottom: 4px;
+    opacity:0.85;
+  }
+  nav a:hover{ opacity:1; border-bottom-color: #0A1B0C; }
+  .topbar-right{ display:flex; align-items:center; gap:14px; }
+  .lang-select{
+    background: rgba(10,27,12,0.9);
+    color: #EFFFED;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-family:'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .lang-select option{ background:#0A1B0C; color:#FFFFFF; }
+  #loggedInAs{ font-size:13px; color:#0A1B0C; font-weight:700; }
+  #logoutBtn{
+    padding:8px 16px; font-size:12px;
+    background: rgba(10,27,12,0.9); color:white !important;
+    border:1px solid #0A1B0C !important;
+  }
+
+  /* ---------- Layout ---------- */
+  .wrap{ max-width: 1120px; margin: 0 auto; padding: 40px 40px 100px 40px; }
+  .hero{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    gap: 40px; margin-bottom: 36px;
+    border-bottom: 1px solid var(--line); padding-bottom: 28px;
+  }
+  .hero h1{ font-size: 32px; max-width: 520px; text-transform:none; font-family:'Inter',sans-serif; font-weight:800; letter-spacing:-0.01em; }
+  .hero p{ color: var(--ink-soft); max-width: 460px; font-size: 15px;}
+  .hero-stat{ text-align:right; min-width: 160px; }
+  .hero-stat .num{ font-family:'Anton', sans-serif; font-size: 42px; color: var(--forest); line-height: 1; }
+  .hero-stat .label{ font-size: 12px; color: var(--ink-soft); margin-top:4px; }
+
+  .grid{ display:grid; grid-template-columns: 1.1fr 0.9fr; gap: 28px; }
+  @media (max-width: 880px){ .grid{ grid-template-columns: 1fr; } }
+
+  .panel{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    padding: 28px;
+  }
+  .panel + .panel{ margin-top: 24px; }
+  .panel h2{ font-size: 18px; }
+  .panel .sub{ color: var(--ink-soft); font-size: 13px; margin-bottom: 20px; }
+
+  .field{ margin-bottom: 16px; }
+  .field label{
+    display:block;
+    font-size: 11.5px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.02em;
+  }
+  .field input[type=text],
+  .field input[type=number],
+  .field select,
+  .field input[type=email],
+  .field input[type=password],
+  .field input[type=file]{
+    width:100%;
+    padding: 11px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    font-family:'Inter', sans-serif;
+    font-size: 14px;
+    background: #E9F2E4;
+    color: #10190F;
+  }
+  .field input:focus, .field select:focus{
+    outline: none;
+    border-color: var(--forest);
+    box-shadow: 0 0 0 3px rgba(74,222,96,0.18);
+  }
+
+  .loc-row{ display:flex; gap:10px; }
+  .loc-row input{ flex:1; }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding: 11px 20px;
+    border-radius: var(--radius-pill);
+    border: none;
+    font-family:'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    cursor:pointer;
+    transition: transform .08s ease, filter .12s ease;
+  }
+  .btn:active{ transform: scale(0.98); }
+  .btn-primary{ background: green; color:white; }
+  .btn-primary:hover{ filter: brightness(1.08); }
+  .btn-copper{ background: green; color: white }
+  .btn-copper:hover{ filter: brightness(1.08); }
+  .btn-ghost{ background: green; color: white; border: 1px solid var(--line); }
+  .btn-ghost:hover{ border-color: var(--forest); }
+  .btn-block{ width:100%; }
+  .btn[disabled]{ opacity:0.5; cursor:not-allowed; }
+
+  .status-msg{ font-size: 13px; margin-top: 10px; }
+  .status-msg.ok{ color: var(--good); }
+  .status-msg.err{ color: #FF6B6B; }
+
+  #map{
+    height: 240px;
+    border-radius: var(--radius-panel);
+    border: 1px solid var(--line);
+    margin-top: 16px;
+    filter: saturate(0.85) brightness(0.92);
+  }
+
+  .recycler-card{
+    display:flex; justify-content:space-between; align-items:center;
+    padding: 14px 0; border-top: 1px solid var(--line);
+  }
+  .recycler-card:first-of-type{ border-top:none; }
+  .recycler-name{ font-weight:600; font-size:14px; color: var(--ink); }
+  .recycler-meta{ font-size:12px; color: var(--ink-soft); margin-top:2px; }
+  .badge{
+    font-size: 10px; font-weight:700; letter-spacing: 0.03em;
+    padding: 3px 8px; border-radius: var(--radius-pill);
+    background: #123317; color: var(--good); margin-right: 6px;
+  }
+  .distance-pill{ font-family:'Anton', sans-serif; font-size: 15px; color: var(--forest); white-space:nowrap; }
+
+  .price-box{
+    display:flex; align-items:baseline; gap: 8px;
+    background: var(--panel-hi);
+    border: 1px dashed var(--line);
+    padding: 16px 18px;
+    border-radius: var(--radius-panel);
+    margin-bottom: 20px;
+  }
+  .price-box .amount{ font-family:'Anton', sans-serif; font-size: 30px; color: var(--ink); }
+  .price-box .note{ font-size:12px; color: var(--ink-soft); }
+
+  /* ---------- Tracking stepper ---------- */
+  .tracker{ display:flex; justify-content:space-between; margin: 26px 0 6px 0; }
+  .tstep{ flex:1; text-align:center; position:relative; }
+  .tstep:not(:last-child):after{
+    content:''; position:absolute; top:13px; left:55%;
+    width:90%; height:2px; background: var(--line); z-index:0;
+  }
+  .tstep.done:not(:last-child):after{ background: var(--forest); }
+  .tdot{
+    width:26px; height:26px; border-radius:50%;
+    background: var(--panel); border: 2px solid var(--line);
+    margin: 0 auto 8px auto; position:relative; z-index:1;
+  }
+  .tstep.done .tdot{ background: var(--forest); border-color: var(--forest); }
+  .tstep.active .tdot{ border-color: var(--forest); box-shadow: 0 0 0 4px rgba(74,222,96,0.18); }
+  .tlabel{ font-size: 12px; color: var(--ink-soft); }
+  .tstep.done .tlabel{ color: var(--ink); font-weight:600; }
+
+  /* ---------- Proof photo gallery ---------- */
+  .proof-gallery{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap:12px;
+    margin-top:14px;
+  }
+  .proof-item{
+    display:block; text-decoration:none;
+    border:1px solid var(--line); border-radius:8px; overflow:hidden;
+    background: #0D160C;
+    transition: border-color .15s ease, transform .12s ease;
+  }
+  .proof-item:hover{ border-color: var(--forest); transform: translateY(-2px); }
+  .proof-item img{ width:100%; height:110px; object-fit:cover; display:block; }
+  .proof-item .cap{ font-size:11px; color: var(--ink-soft); padding:6px 8px; }
+
+  .qr-wrap{
+    text-align:center; padding: 20px;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius-panel);
+    margin-top: 16px; background: #F2FAEC;
+  }
+  #qrcode{ display:inline-block; margin-top: 10px; }
+  .slip-id{ font-family:'Anton', sans-serif; font-size: 15px; color: #10190F; margin-top:8px;}
+  .slip-label{ font-size:12px; color:#4A5B47; }
+
+  footer{ text-align:center; padding: 30px; color: var(--ink-soft); font-size: 12px; border-top: 1px solid var(--line); }
+  .hidden{ display:none !important; }
+
+  /* ---------- Multi-item form ---------- */
+  .item-card{
+    background:#fff; border:1px solid var(--line); border-radius: var(--radius-panel);
+    padding:16px 16px 12px 16px; margin-bottom:14px;
+  }
+  .item-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .item-title{ font-family:'Anton',sans-serif; font-size:15px; letter-spacing:0.03em; text-transform:uppercase; color: var(--forest); }
+  .item-remove{
+    background:none; border:1px solid #F3B4B4; color:#B91C1C; border-radius:999px;
+    padding:4px 12px; font-size:11px; font-weight:700; cursor:pointer; text-transform:uppercase;
+  }
+  .item-remove:hover{ background:#FEF2F2; }
+  .item-row{ display:grid; grid-template-columns: 1.4fr 1fr; gap:12px; }
+  @media (max-width: 480px){ .item-row{ grid-template-columns:1fr; } }
+  .item-card .field input[type=file]{ padding:8px; }
+  .thumbs{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .thumb{ position:relative; width:64px; height:64px; }
+  .thumb img{ width:100%; height:100%; object-fit:cover; border-radius:6px; border:1px solid var(--line); display:block; }
+  .thumb button{
+    position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%;
+    border:none; background:#B91C1C; color:#fff; font-size:13px; line-height:20px; padding:0; cursor:pointer;
+  }
+  .classify-btn{ margin-top:10px; padding:8px 14px; font-size:11.5px; }
+  .item-line{
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    border-top:1px dashed var(--line); padding-top:10px; margin-top:2px; font-size:13px; color: var(--ink-soft);
+  }
+  .item-line strong{ font-family:'Anton',sans-serif; font-size:17px; font-weight:400; color: var(--ink); }
+
+  .price-summary{
+    background: var(--panel-hi); border:1px dashed var(--line);
+    border-radius: var(--radius-panel); padding:14px 18px; margin-bottom:20px;
+  }
+  .sum-row{ display:flex; justify-content:space-between; gap:12px; font-size:13px; padding:6px 0; border-bottom:1px solid var(--line); color: var(--ink-soft); }
+  .sum-row span:last-child{ color: var(--ink); font-weight:700; white-space:nowrap; }
+  .sum-total{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding-top:12px; }
+  .sum-total-label{ font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.03em; color: var(--ink); }
+  .sum-total .note{ font-size:11.5px; color: var(--ink-soft); }
+  .sum-total .amount{ font-family:'Anton',sans-serif; font-size:32px; color: var(--forest); }
+  .cov-ok{ color: var(--forest); font-weight:600; }
+  .cov-warn{ color:#B45309; font-weight:600; }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-name">Scrapsetu</div>
+  </div>
+  <nav>
+    <a href="index.html" data-i18n="col.nav.home">Home</a>
+    <a href="#request" data-i18n="col.nav.new">New request</a>
+    <a href="#track" data-i18n="col.nav.track">Track pickup</a>
+  </nav>
+  <div class="topbar-right">
+    <span id="loggedInAs"></span>
+    <select class="lang-select" id="langSelect" aria-label="Language">
+      <option value="en">English</option>
+      <option value="hi">हिन्दी</option>
+      <option value="mr">मराठी</option>
+    </select>
+    <div id="authWrap" class="hidden" style="display:flex; align-items:center; gap:14px;">
+      <button class="btn btn-ghost" id="logoutBtn" data-i18n="common.logout">Log out</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="loginWrap">
+  <div class="panel" style="max-width:420px; margin:40px auto;">
+    <h2 id="authHeading" style="text-align:center;" data-i18n="col.auth.heading">Collector login</h2>
+    <div class="sub" id="authSub" data-i18n="col.auth.sub">Log in to submit requests and track your pickups.</div>
+
+    <div id="loginForm">
+      <div class="field"><label data-i18n="col.email">Email</label><input type="email" id="loginEmail" /></div>
+      <div class="field"><label data-i18n="col.password">Password</label><input type="password" id="loginPassword" /></div>
+      <button class="btn btn-primary btn-block" id="loginBtn" data-i18n="col.btn.login">Log in</button>
+      <div class="status-msg" id="loginMsg"></div>
+      <div style="margin-top:14px; font-size:13px; text-align:center;">
+        <span data-i18n="col.newHere">New here?</span>
+        <a href="#" id="showSignup" data-i18n="col.createAccount">Create an account</a>
+      </div>
+    </div>
+
+    <div id="signupForm" class="hidden">
+      <div class="field"><label data-i18n="col.name">Name</label><input type="text" id="signupName" /></div>
+      <div class="field"><label data-i18n="col.email">Email</label><input type="email" id="signupEmail" /></div>
+      <div class="field"><label data-i18n="col.password.min">Password (min. 6 characters)</label><input type="password" id="signupPassword" /></div>
+      <button class="btn btn-primary btn-block" id="signupBtn" data-i18n="col.btn.signup">Create account</button>
+      <div class="status-msg" id="signupMsg"></div>
+      <div style="margin-top:14px; font-size:13px; text-align:center;">
+        <span data-i18n="col.alreadyHave">Already have an account?</span>
+        <a href="#" id="showLogin" data-i18n="col.loginLink">Log in</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap hidden" id="appWrap">
+
+  <div class="hero">
+    <div>
+      <h1 id="request" data-i18n="col.hero.title">Turn e-waste into a cleaner tomorrow.</h1>
+      <p data-i18n="col.hero.desc" >Log what you're scrapping, get a fair live price, and get matched to a verified CPCB-registered recycler nearby — start to finish, tracked.</p>
+    </div>
+    <div class="hero-stat" >
+      <div class="num" id="statCount">0</div>
+      <div class="label" data-i18n="col.hero.stat">pickups logged this session</div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- LEFT COLUMN -->
+    <div>
+      <div class="panel">
+        <h2 data-i18n="col.p1.title">1 · New pickup request</h2>
+        <div class="sub" data-i18n="col.p1.sub">Tell us what you're recycling and where to collect it from.</div>
+
+        <h3 id="itemsHeading" style="font-size:15px; margin:0 0 12px 0;">Items to recycle</h3>
+        <div id="itemsList"></div>
+        <button type="button" class="btn btn-ghost btn-block" id="addItemBtn" style="margin-bottom:22px;">+ Add another item</button>
+
+        <div class="field">
+          <label data-i18n="col.loc.label">Pickup location</label>
+          <div class="loc-row">
+            <input type="text" id="locationText" data-i18n-placeholder="col.loc.placeholder" placeholder="Click 'Detect' to fetch your location" readonly />
+            <button class="btn btn-ghost" id="detectBtn" data-i18n="col.detect">Detect</button>
+          </div>
+          <div class="status-msg" id="locStatus"></div>
+        </div>
+
+        <div class="price-summary" id="priceSummary"></div>
+
+        <button class="btn btn-primary btn-block" id="findBtn" data-i18n="col.find">Find nearest recyclers</button>
+        <div class="status-msg" id="requestStatus"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+      <div class="panel" id="recyclers">
+        <h2 data-i18n="col.p2.title">2 · Nearest recyclers</h2>
+        <div class="sub" data-i18n="col.p2.sub">Verified, CPCB-registered, matched to your material.</div>
+        <div id="recyclerList">
+          <div class="status-msg" data-i18n="col.p2.hint">Submit a request on the left to see matches here.</div>
+        </div>
+        <div id="map" class="hidden"></div>
+      </div>
+
+      <div class="panel hidden" id="confirmPanel">
+        <h2 data-i18n="col.p3.title">3 · Confirm pickup</h2>
+        <div class="sub" data-i18n="col.p3.sub">Locks in your slot with the selected recycler.</div>
+        <div class="field">
+          <label data-i18n="col.date.label">Pickup date</label>
+          <input type="text" id="pickupDate" data-i18n-placeholder="col.date.placeholder" placeholder="e.g. 14 Sep 2026" />
+        </div>
+        <div class="field">
+          <label data-i18n="col.time.label">Time window</label>
+          <input type="text" id="pickupTime" data-i18n-placeholder="col.time.placeholder" placeholder="e.g. 10:00 AM – 12:00 PM" />
+        </div>
+        <button class="btn btn-copper btn-block" id="confirmBtn" data-i18n="col.confirm">Confirm pickup</button>
+
+        <div class="qr-wrap hidden" id="qrPanel">
+          <div class="slip-label" data-i18n="col.slip.title">Digital pickup slip</div>
+          <div id="qrcode"></div>
+          <div class="slip-id" id="txnId"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="track" style="margin-top:28px;">
+    <h2 data-i18n="col.track.title">Recycling status</h2>
+    <div class="sub" data-i18n="col.track.sub">Follow your e-waste from collection to full recycling.</div>
+    <div class="tracker" id="tracker">
+      <div class="tstep done" data-step="Collected"><div class="tdot"></div><div class="tlabel" data-i18n="step.Collected">Collected</div></div>
+      <div class="tstep" data-step="Delivered"><div class="tdot"></div><div class="tlabel" data-i18n="step.Delivered">Delivered to recycler</div></div>
+      <div class="tstep" data-step="Processing"><div class="tdot"></div><div class="tlabel" data-i18n="step.Processing">Processing</div></div>
+      <div class="tstep" data-step="Recycled"><div class="tdot"></div><div class="tlabel" data-i18n="step.Recycled">Recycled</div></div>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="proofPanel" style="margin-top:28px;">
+    <h2 data-i18n="col.proof.title">Confirmation photos</h2>
+    <div class="sub" data-i18n="col.proof.sub">Photos uploaded by the recycler as proof at each stage.</div>
+    <div class="proof-gallery" id="proofGallery"></div>
+  </div>
+
+  <div class="panel" id="myRequests" style="margin-top:28px;">
+    <h2 data-i18n="col.myreq.title">My requests</h2>
+    <div class="sub" data-i18n="col.myreq.sub">Every pickup you've ever logged, with live status.</div>
+    <div id="myRequestsList">
+      <div class="status-msg" data-i18n="col.myreq.loading">Loading…</div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<!-- Leaflet -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<!-- QR code generator -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- i18n -->
+<script src="i18n.js"></script>
+
+<script>
+/* ============================================================
+   0. BACKEND URL
+   ============================================================ */
+const BACKEND_URL = "http://localhost:3001";
+
+/* ============================================================
+   1. FIREBASE SETUP
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyABsK4MK2E392dAMOkfkWYXrToAoE_sqo8",
+  authDomain: "scrapsetu-92ce6.firebaseapp.com",
+  projectId: "scrapsetu-92ce6",
+  storageBucket: "scrapsetu-92ce6.firebasestorage.app",
+  messagingSenderId: "727088751474",
+  appId: "1:727088751474:web:70703aa38f20ea44e1b3eb",
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+const storage = firebase.storage();
+
+/* ============================================================
+   1b. AUTH
+   ============================================================ */
+let currentUser = null;
+let unsubscribeMyRequests = null;
+let unsubscribeMyTxns = null;
+
+document.getElementById('showSignup').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('loginForm').classList.add('hidden');
+  document.getElementById('signupForm').classList.remove('hidden');
+  document.getElementById('authHeading').textContent = t('col.auth.signupHeading');
+});
+document.getElementById('showLogin').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('signupForm').classList.add('hidden');
+  document.getElementById('loginForm').classList.remove('hidden');
+  document.getElementById('authHeading').textContent = t('col.auth.heading');
+});
+
+document.getElementById('signupBtn').addEventListener('click', async () => {
+  const msg = document.getElementById('signupMsg');
+  const name = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value;
+
+  if (!name || !email || password.length < 6){
+    msg.textContent = t('col.msg.signupFill');
+    msg.className = 'status-msg err';
+    return;
+  }
+  msg.textContent = t('col.msg.creating');
+  msg.className = 'status-msg';
+  try{
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    await cred.user.updateProfile({ displayName: name });
+
+    // Record the role so the recycler app can tell collector accounts apart.
+    // Non-fatal if this write fails — the collector-side guard keys off the
+    // absence of a `recyclers/{uid}` doc, not the presence of this one.
+    try {
+      await db.collection('collectors').doc(cred.user.uid).set({
+        name,
+        email,
+        role: 'collector',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (profileErr) {
+      console.warn('Could not write collectors profile:', profileErr.message);
+    }
+  }catch(e){
+    msg.textContent = t('col.msg.signupFail') + ' ' + e.message;
+    msg.className = 'status-msg err';
+  }
+});
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const msg = document.getElementById('loginMsg');
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  if (!email || !password){
+    msg.textContent = t('col.msg.loginBoth');
+    msg.className = 'status-msg err';
+    return;
+  }
+  msg.textContent = t('col.msg.loggingIn');
+  msg.className = 'status-msg';
+  try{
+    await auth.signInWithEmailAndPassword(email, password);
+  }catch(e){
+    msg.textContent = t('col.msg.loginFail') + ' ' + e.message;
+    msg.className = 'status-msg err';
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  if (unsubscribeMyRequests) unsubscribeMyRequests();
+  if (unsubscribeMyTxns) unsubscribeMyTxns();
+  await auth.signOut();
+});
+
+auth.onAuthStateChanged(async (user) => {
+  // ── Not signed in → show the login card ──────────────────────────
+  if (!user){
+    currentUser = null;
+    document.getElementById('loginWrap').classList.remove('hidden');
+    document.getElementById('appWrap').classList.add('hidden');
+    document.getElementById('authWrap').classList.add('hidden');
+    return;
+  }
+
+  // ── Role guard ──────────────────────────────────────────────────
+  // A recycler has a doc in `recyclers/{uid}`. If we find one, this
+  // account belongs on the recycler dashboard — refuse the collector
+  // session even though the credentials themselves were valid.
+  try {
+    const recyclerDoc = await db.collection('recyclers').doc(user.uid).get();
+    if (recyclerDoc.exists){
+      const msg = document.getElementById('loginMsg');
+      msg.textContent = t('col.msg.recyclerAccount');
+      msg.className = 'status-msg err';
+      await auth.signOut();   // fires this handler again with user=null
+      return;
+    }
+  } catch (e){
+    // Fail open: a transient read error shouldn't lock a legit
+    // collector out. Firestore rules are the real boundary.
+    console.warn('Role check failed — allowing collector login:', e.message);
+  }
+
+  // ── Signed in AND not a recycler → show the collector app ───────
+  currentUser = user;
+  document.getElementById('loginWrap').classList.add('hidden');
+  document.getElementById('appWrap').classList.remove('hidden');
+  document.getElementById('authWrap').classList.remove('hidden');
+  document.getElementById('loggedInAs').textContent = user.displayName || user.email;
+  watchMyRequests(user.uid);
+  watchMyTransactions(user.uid);
+});
+
+/* ============================================================
+   LIVE DATA CACHES
+   ============================================================ */
+let myRequestsCache = [];
+let myTxns = [];               // newest first
+let txnByRequestId = {};
+
+function watchMyRequests(uid){
+  unsubscribeMyRequests = db.collection('requests')
+    .where('collectorId', '==', uid)
+    .onSnapshot((snapshot) => {
+      myRequestsCache = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderMyRequests();
+    }, (err) => {
+      document.getElementById('myRequestsList').innerHTML =
+        `<div class="status-msg err">${t('col.msg.requestsFail')} ${err.message}</div>`;
+    });
+}
+
+/* Listen to all transactions that belong to this collector.
+   This is what powers the live tracker + the proof photo gallery. */
+function watchMyTransactions(uid){
+  unsubscribeMyTxns = db.collection('transactions')
+    .where('collectorId', '==', uid)
+    .onSnapshot((snapshot) => {
+      myTxns = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      myTxns.sort((a, b) => {
+        const ta = (a.createdAt && a.createdAt.seconds) || 0;
+        const tb = (b.createdAt && b.createdAt.seconds) || 0;
+        return tb - ta;
+      });
+
+      txnByRequestId = {};
+      myTxns.forEach(t => { if (t.requestId) txnByRequestId[t.requestId] = t; });
+
+      if (myTxns.length) setStep(myTxns[0].status);
+      renderProofGallery();
+      renderMyRequests();
+    }, (err) => {
+      // Not fatal — the tracker just won't auto-update if rules block this query.
+      console.warn('transactions listener error:', err.message);
+    });
+}
+
+/* ============================================================
+   RENDER: my requests list
+   ============================================================ */
+function renderMyRequests(){
+  const listEl = document.getElementById('myRequestsList');
+  if (!myRequestsCache.length){
+    listEl.innerHTML = `<div class="status-msg">${t('col.myreq.empty')}</div>`;
+    return;
+  }
+  listEl.innerHTML = '';
+  myRequestsCache.forEach(r => {
+    const txn = txnByRequestId[r.id];
+    const status = (txn && txn.status) || r.status || 'Collected';
+    const photos = (txn && txn.confirmationPhotos) || [];
+    const latestPhoto = photos.length ? photos[photos.length - 1].url : null;
+
+    // New multi-item requests have r.items; older single-item ones don't.
+    const hasItems = Array.isArray(r.items) && r.items.length > 0;
+    const title = hasItems
+      ? `${r.items.length} ${T('items')} · ${r.quantity} kg`
+      : `${esc(r.material)} · ${r.quantity} kg`;
+    const breakdown = hasItems
+      ? r.items.map(i => `<div class="recycler-meta">${esc(t('col.mat.' + i.material))}${i.itemName ? ' (' + esc(i.itemName) + ')' : ''} · ${i.quantity} kg — ₹${Number(i.price).toLocaleString('en-IN')}</div>`).join('')
+      : '';
+
+    const row = document.createElement('div');
+    row.className = 'recycler-card';
+    row.innerHTML = `
+      <div style="display:flex; align-items:center; gap:12px;">
+        ${latestPhoto
+          ? `<a href="${latestPhoto}" target="_blank" rel="noopener">
+               <img src="${latestPhoto}" alt=""
+                 style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--line);" />
+             </a>` : ''}
+        <div>
+          <div class="recycler-name">${title}</div>
+          ${breakdown}
+          <div class="recycler-meta"><strong>${T('total')}: ₹${Number(r.price).toLocaleString('en-IN')}</strong> ${t('col.msg.estValue')}</div>
+        </div>
+      </div>
+      <div class="distance-pill" style="font-size:12px;">${t('step.' + status)}</div>
+    `;
+    listEl.appendChild(row);
+  });
+}
+
+/* ============================================================
+   RENDER: proof photo gallery
+   ============================================================ */
+function renderProofGallery(){
+  const panel = document.getElementById('proofPanel');
+  const gal = document.getElementById('proofGallery');
+
+  const items = [];
+  myTxns.forEach(txn => {
+    (txn.confirmationPhotos || []).forEach(p => items.push({ ...p, txn }));
+  });
+
+  if (!items.length){
+    panel.classList.add('hidden');
+    return;
+  }
+  panel.classList.remove('hidden');
+  gal.innerHTML = '';
+  items.forEach(p => {
+    const a = document.createElement('a');
+    a.className = 'proof-item';
+    a.href = p.url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.innerHTML = `
+      <img src="${p.url}" alt="" loading="lazy">
+      <div class="cap">${t('step.' + (p.status || 'Collected'))} · ${p.txn.material}</div>
+    `;
+    gal.appendChild(a);
+  });
+}
+
+/* Re-render dynamic content when the language changes */
+window.addEventListener('languagechange', () => {
+  renderMyRequests();
+  renderProofGallery();
+  updatePrice();
+  if (document.getElementById('authHeading').textContent.trim() !== '') {
+    const signupVisible = !document.getElementById('signupForm').classList.contains('hidden');
+    document.getElementById('authHeading').textContent =
+      signupVisible ? t('col.auth.signupHeading') : t('col.auth.heading');
+  }
+});
+
+/* ============================================================
+   2. STATIC PRICING TABLE
+   ============================================================ */
+const PRICING = {
+  PCB: 570,
+  Copper: 720,
+  Aluminium: 180,
+  Batteries: 110,
+  Plastic: 25
+};
+
+/* ============================================================
+   3. STATE
+   ============================================================ */
+let userLoc = null;
+let selectedRecycler = null;
+let currentRequest = null;
+let map, userMarker, recyclerMarker, routeLine;
+let pickupCount = 0;
+let pendingPhotoUpload = null; // resolves once the background scrap-photo upload finishes
+
+/* ============================================================
+   4. MULTI-ITEM FORM (items, photos, per-item price, total)
+   ============================================================ */
+const MATERIALS = Object.keys(PRICING);
+const MAX_PHOTOS_PER_ITEM = 5;
+
+const LOCAL_I18N = {
+  en: {
+    itemsHeading: 'Items to recycle', item: 'Item', remove: 'Remove',
+    photos: 'Photos of this item (optional — up to 5)', itemName: 'Item name (optional)',
+    itemNamePh: 'e.g. Old laptop battery', classify: 'Identify from first photo',
+    addItem: '+ Add another item', subtotal: 'Item value', total: 'Total estimated value',
+    totalNote: 'for all items at current market rates', noItems: 'Add at least one item.',
+    qtyErr: 'Enter a quantity greater than 0 for every item.', maxPhotos: 'Maximum 5 photos per item.',
+    acceptsAll: 'Accepts all your materials', acceptsSome: 'Accepts', notAccepted: 'Not accepted:',
+    perKg: '/kg', kg: 'kg', items: 'items', removePhoto: 'Remove photo'
+  },
+  hi: {
+    itemsHeading: 'रीसायकल करने के आइटम', item: 'आइटम', remove: 'हटाएँ',
+    photos: 'इस आइटम की फोटो (वैकल्पिक — अधिकतम 5)', itemName: 'आइटम का नाम (वैकल्पिक)',
+    itemNamePh: 'जैसे पुरानी लैपटॉप बैटरी', classify: 'पहली फोटो से पहचानें',
+    addItem: '+ एक और आइटम जोड़ें', subtotal: 'आइटम का मूल्य', total: 'कुल अनुमानित मूल्य',
+    totalNote: 'सभी आइटम का वर्तमान बाज़ार दर पर', noItems: 'कम से कम एक आइटम जोड़ें।',
+    qtyErr: 'हर आइटम के लिए 0 से अधिक मात्रा दर्ज करें।', maxPhotos: 'प्रति आइटम अधिकतम 5 फोटो।',
+    acceptsAll: 'आपकी सभी सामग्री स्वीकार करता है', acceptsSome: 'स्वीकार करता है', notAccepted: 'स्वीकार नहीं:',
+    perKg: '/किग्रा', kg: 'किग्रा', items: 'आइटम', removePhoto: 'फोटो हटाएँ'
+  },
+  mr: {
+    itemsHeading: 'रीसायकल करायच्या वस्तू', item: 'वस्तू', remove: 'काढा',
+    photos: 'या वस्तूचे फोटो (ऐच्छिक — कमाल 5)', itemName: 'वस्तूचे नाव (ऐच्छिक)',
+    itemNamePh: 'उदा. जुनी लॅपटॉप बॅटरी', classify: 'पहिल्या फोटोवरून ओळखा',
+    addItem: '+ आणखी एक वस्तू जोडा', subtotal: 'वस्तूचे मूल्य', total: 'एकूण अंदाजित मूल्य',
+    totalNote: 'सर्व वस्तूंसाठी सध्याच्या बाजार दराने', noItems: 'किमान एक वस्तू जोडा.',
+    qtyErr: 'प्रत्येक वस्तूसाठी 0 पेक्षा जास्त प्रमाण टाका.', maxPhotos: 'प्रति वस्तू कमाल 5 फोटो.',
+    acceptsAll: 'तुमची सर्व सामग्री स्वीकारतो', acceptsSome: 'स्वीकारतो', notAccepted: 'स्वीकारत नाही:',
+    perKg: '/किग्रॅ', kg: 'किग्रॅ', items: 'वस्तू', removePhoto: 'फोटो काढा'
+  }
+};
+function T(key){
+  const lang = (window.getLang && getLang()) || 'en';
+  return (LOCAL_I18N[lang] && LOCAL_I18N[lang][key]) || LOCAL_I18N.en[key] || key;
+}
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+let items = [];
+let itemSeq = 0;
+function newItem(){
+  return { uid: ++itemSeq, material: 'PCB', itemName: '', quantity: 1, files: [], previews: [] };
+}
+
+function itemPrice(it){ return Math.round((PRICING[it.material] || 0) * (it.quantity || 0)); }
+
+function renderItems(){
+  const wrap = document.getElementById('itemsList');
+  wrap.innerHTML = '';
+
+  items.forEach((it, idx) => {
+    const card = document.createElement('div');
+    card.className = 'item-card';
+    card.innerHTML = `
+      <div class="item-head">
+        <div class="item-title">${T('item')} ${idx + 1}</div>
+        ${items.length > 1 ? `<button type="button" class="item-remove" data-act="remove">${T('remove')}</button>` : ''}
+      </div>
+
+      <div class="field">
+        <label>${T('photos')}</label>
+        <input type="file" accept="image/*" multiple data-act="files" />
+        <div class="thumbs"></div>
+        <button type="button" class="btn btn-ghost classify-btn hidden" data-act="classify">${T('classify')}</button>
+        <div class="status-msg classify-status"></div>
+      </div>
+
+      <div class="field">
+        <label>${T('itemName')}</label>
+        <input type="text" data-act="name" placeholder="${esc(T('itemNamePh'))}" />
+      </div>
+
+      <div class="item-row">
+        <div class="field">
+          <label>${t('col.material.label')}</label>
+          <select data-act="material">
+            ${MATERIALS.map(m => `<option value="${m}">${esc(t('col.mat.' + m))}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>${t('col.qty.label')}</label>
+          <input type="number" min="0.5" step="0.5" data-act="qty" />
+        </div>
+      </div>
+
+      <div class="item-line"><span class="item-formula"></span><strong class="item-subtotal"></strong></div>
+    `;
+
+    // populate from state (so re-renders on language change keep the data)
+    card.querySelector('[data-act="name"]').value = it.itemName;
+    card.querySelector('[data-act="material"]').value = it.material;
+    card.querySelector('[data-act="qty"]').value = it.quantity;
+
+    card.querySelector('[data-act="name"]').addEventListener('input', e => { it.itemName = e.target.value; });
+    card.querySelector('[data-act="material"]').addEventListener('change', e => {
+      it.material = e.target.value; updateLine(card, it); updatePrice();
+    });
+    card.querySelector('[data-act="qty"]').addEventListener('input', e => {
+      it.quantity = parseFloat(e.target.value) || 0; updateLine(card, it); updatePrice();
+    });
+
+    card.querySelector('[data-act="files"]').addEventListener('change', e => {
+      const picked = Array.from(e.target.files || []);
+      e.target.value = '';  // allow picking the same file again later
+      const room = MAX_PHOTOS_PER_ITEM - it.files.length;
+      if (picked.length > room){
+        const st = card.querySelector('.classify-status');
+        st.textContent = T('maxPhotos'); st.className = 'status-msg classify-status err';
+      }
+      picked.slice(0, Math.max(room, 0)).forEach(f => {
+        it.files.push(f);
+        it.previews.push(URL.createObjectURL(f));
+      });
+      renderThumbs(card, it);
+    });
+
+    card.querySelector('[data-act="classify"]').addEventListener('click', () => classifyItem(card, it));
+
+    const rm = card.querySelector('[data-act="remove"]');
+    if (rm) rm.addEventListener('click', () => {
+      it.previews.forEach(u => URL.revokeObjectURL(u));
+      items = items.filter(x => x.uid !== it.uid);
+      renderItems(); updatePrice();
+    });
+
+    wrap.appendChild(card);
+    renderThumbs(card, it);
+    updateLine(card, it);
+  });
+}
+
+function renderThumbs(card, it){
+  const box = card.querySelector('.thumbs');
+  box.innerHTML = '';
+  it.previews.forEach((url, i) => {
+    const d = document.createElement('div');
+    d.className = 'thumb';
+    d.innerHTML = `<img src="${url}" alt=""><button type="button" title="${esc(T('removePhoto'))}">×</button>`;
+    d.querySelector('button').addEventListener('click', () => {
+      URL.revokeObjectURL(it.previews[i]);
+      it.previews.splice(i, 1);
+      it.files.splice(i, 1);
+      renderThumbs(card, it);
+    });
+    box.appendChild(d);
+  });
+  card.querySelector('.classify-btn').classList.toggle('hidden', it.files.length === 0);
+}
+
+function updateLine(card, it){
+  const rate = PRICING[it.material] || 0;
+  card.querySelector('.item-formula').textContent =
+    `${inr(rate)}${T('perKg')} × ${it.quantity || 0} ${T('kg')}`;
+  card.querySelector('.item-subtotal').textContent = inr(itemPrice(it));
+}
+
+/* Price summary: one line per item + grand total */
+function updatePrice(){
+  const box = document.getElementById('priceSummary');
+  if (!box) return;
+  const total = items.reduce((s, it) => s + itemPrice(it), 0);
+  const rows = items.map((it, i) => {
+    const name = it.itemName.trim() ? ` (${esc(it.itemName.trim())})` : '';
+    return `<div class="sum-row">
+      <span>${T('item')} ${i + 1} · ${esc(t('col.mat.' + it.material))}${name} · ${it.quantity || 0} ${T('kg')}</span>
+      <span>${inr(itemPrice(it))}</span>
+    </div>`;
+  }).join('');
+  box.innerHTML = `
+    ${rows}
+    <div class="sum-total">
+      <div><div class="sum-total-label">${T('total')}</div><div class="note">${T('totalNote')}</div></div>
+      <div class="amount" id="estPrice">${inr(total)}</div>
+    </div>`;
+}
+
+document.getElementById('addItemBtn').addEventListener('click', () => {
+  items.push(newItem());
+  renderItems(); updatePrice();
+  const cards = document.querySelectorAll('#itemsList .item-card');
+  if (cards.length) cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+
+window.addEventListener('languagechange', () => {
+  document.getElementById('itemsHeading').textContent = T('itemsHeading');
+  document.getElementById('addItemBtn').textContent = T('addItem');
+  renderItems(); updatePrice();
+});
+
+/* AI classification — uses the FIRST photo of that item */
+async function classifyItem(card, it){
+  if (!it.files.length) return;
+  const statusEl = card.querySelector('.classify-status');
+  statusEl.textContent = t('col.msg.analyzing');
+  statusEl.className = 'status-msg classify-status';
+
+  const formData = new FormData();
+  formData.append('image', it.files[0]);
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/classify`, { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Classification failed.');
+
+    const match = MATERIALS.find(m => m.toLowerCase() === (data.material || '').toLowerCase());
+    if (match){
+      it.material = match;
+      card.querySelector('[data-act="material"]').value = match;
+    }
+    if (data.itemType && !it.itemName.trim()){
+      it.itemName = data.itemType;
+      card.querySelector('[data-act="name"]').value = data.itemType;
+    }
+    updateLine(card, it); updatePrice();
+    statusEl.textContent = `${t('col.msg.identified')} ${data.itemType || '—'} (${data.material || '—'})`;
+    statusEl.className = 'status-msg classify-status ok';
+  } catch (err) {
+    statusEl.textContent = `${t('col.msg.classifyFail')} ${err.message} ${t('col.msg.classifyManual')}`;
+    statusEl.className = 'status-msg classify-status err';
+  }
+}
+
+/* Upload one photo — via backend → Cloudinary */
+async function uploadScrapPhoto(requestId, file){
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await fetch(`${BACKEND_URL}/upload`, { method: 'POST', body: formData });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Upload failed.');
+  return data.url;
+}
+
+// initial state: one empty item
+items = [newItem()];
+document.getElementById('itemsHeading').textContent = T('itemsHeading');
+document.getElementById('addItemBtn').textContent = T('addItem');
+renderItems();
+updatePrice();
+
+/* ============================================================
+   5. GEOLOCATION
+   ============================================================ */
+document.getElementById('detectBtn').addEventListener('click', () => {
+  const statusEl = document.getElementById('locStatus');
+  statusEl.textContent = t('col.msg.locFetching');
+  statusEl.className = 'status-msg';
+
+  if (!navigator.geolocation){
+    statusEl.textContent = t('col.msg.locNoSupport');
+    statusEl.className = 'status-msg err';
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    let address = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      const data = await res.json();
+      if (data.display_name) address = data.display_name;
+    } catch(e){ /* best-effort */ }
+
+    userLoc = { lat, lng, address };
+    document.getElementById('locationText').value = address;
+    statusEl.textContent = t('col.msg.locCaptured');
+    statusEl.className = 'status-msg ok';
+  }, () => {
+    statusEl.textContent = t('col.msg.locDenied');
+    statusEl.className = 'status-msg err';
+  });
+});
+
+/* ============================================================
+   6. HAVERSINE DISTANCE
+   ============================================================ */
+function getDistanceKm(lat1, lng1, lat2, lng2){
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 +
+            Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
+            Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+/* ============================================================
+   8. SAVE REQUEST + FIND NEAREST RECYCLERS
+   ============================================================ */
+document.getElementById('findBtn').addEventListener('click', async () => {
+  const reqStatus = document.getElementById('requestStatus');
+  const btn = document.getElementById('findBtn');
+
+  if (!items.length || items.some(it => !(it.quantity > 0))){
+    reqStatus.textContent = T('qtyErr');
+    reqStatus.className = 'status-msg err';
+    return;
+  }
+  if (!userLoc){
+    reqStatus.textContent = t('col.msg.locFirst');
+    reqStatus.className = 'status-msg err';
+    return;
+  }
+
+  reqStatus.textContent = t('col.msg.saving');
+  reqStatus.className = 'status-msg';
+  btn.disabled = true;
+
+  // Snapshot everything now, so edits made while photos upload can't leak in.
+  const built = items.map(it => {
+    const rate = PRICING[it.material] || 0;
+    return {
+      material: it.material,
+      itemName: it.itemName.trim(),
+      quantity: it.quantity,
+      rate,
+      price: Math.round(rate * it.quantity)
+    };
+  });
+  const filesPerItem = items.map(it => it.files.slice());
+  const totalPrice = built.reduce((s, i) => s + i.price, 0);
+  const totalQty   = Math.round(built.reduce((s, i) => s + i.quantity, 0) * 100) / 100;
+  const materials  = [...new Set(built.map(i => i.material))];
+
+  try{
+    const docRef = await db.collection('requests').add({
+      // summary fields (kept so older screens keep working)
+      material: materials.join(', '),
+      materials,
+      quantity: totalQty,
+      price: totalPrice,
+      // per-item breakdown
+      items: built,
+      location: userLoc,
+      status: 'Collected',
+      collectorId: currentUser.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    currentRequest = {
+      id: docRef.id,
+      material: materials.join(', '),
+      materials, quantity: totalQty, price: totalPrice,
+      items: built, location: userLoc,
+      photoUrl: null, photoUrls: []
+    };
+
+    // Upload ALL photos of ALL items in the background — the request is
+    // already saved, so a slow/failed upload never blocks the flow.
+    pendingPhotoUpload = null;
+    if (filesPerItem.some(f => f.length)){
+      pendingPhotoUpload = (async () => {
+        const withUrls = await Promise.all(built.map(async (item, i) => {
+          const urls = (await Promise.all(filesPerItem[i].map(f =>
+            uploadScrapPhoto(docRef.id, f).catch(err => {
+              console.warn('Scrap photo upload failed:', err.message);
+              return null;
+            })
+          ))).filter(Boolean);
+          return { ...item, photoUrls: urls };
+        }));
+        const allUrls = withUrls.flatMap(i => i.photoUrls);
+        currentRequest.items = withUrls;
+        currentRequest.photoUrls = allUrls;
+        currentRequest.photoUrl = allUrls[0] || null;
+        if (allUrls.length){
+          await docRef.update({ items: withUrls, photoUrls: allUrls, photoUrl: allUrls[0] });
+        }
+      })().catch(err => console.warn('Photo upload batch failed:', err.message));
+    }
+
+    reqStatus.textContent = t('col.msg.saved');
+    reqStatus.className = 'status-msg ok';
+    pickupCount++;
+    document.getElementById('statCount').textContent = pickupCount;
+  }catch(e){
+    reqStatus.textContent = t('col.msg.saveFail') + ' ' + e.message;
+    reqStatus.className = 'status-msg err';
+    btn.disabled = false;
+    return;
+  }
+
+  btn.disabled = false;
+  await findNearestRecyclers(currentRequest.materials);
+});
+
+async function findNearestRecyclers(materials){
+  const listEl = document.getElementById('recyclerList');
+  listEl.innerHTML = `<div class="status-msg">${t('col.msg.searching')}</div>`;
+
+  let snapshot;
+  try{
+    // recyclers that accept AT LEAST ONE of the materials in this request
+    snapshot = await db.collection('recyclers')
+      .where('materials', 'array-contains-any', materials)
+      .get();
+  }catch(e){
+    listEl.innerHTML = `<div class="status-msg err">${t('col.msg.recyclerLoadFail')} ${esc(e.message)}</div>`;
+    return;
+  }
+
+  if (snapshot.empty){
+    listEl.innerHTML = `<div class="status-msg">${t('col.msg.noRecyclers')}</div>`;
+    return;
+  }
+
+  const results = snapshot.docs.map(doc => {
+    const d = doc.data();
+    const distance = getDistanceKm(userLoc.lat, userLoc.lng, d.lat, d.lng);
+    const accepted = materials.filter(m => (d.materials || []).includes(m));
+    const missing  = materials.filter(m => !(d.materials || []).includes(m));
+    return { id: doc.id, ...d, distance, accepted, missing };
+  })
+  // recyclers that can take the most of your items first, then nearest
+  .sort((a,b) => (b.accepted.length - a.accepted.length) || (a.distance - b.distance))
+  .slice(0, 5);
+
+  listEl.innerHTML = '';
+  results.forEach((r, i) => {
+    const card = document.createElement('div');
+    card.className = 'recycler-card';
+    const coverage = r.missing.length === 0
+      ? `<span class="cov-ok">${T('acceptsAll')}</span>`
+      : `<span class="cov-warn">${T('acceptsSome')} ${r.accepted.length}/${materials.length} · ${T('notAccepted')} ${r.missing.map(m => t('col.mat.'+m)).join(', ')}</span>`;
+    card.innerHTML = `
+      <div>
+        <div class="recycler-name">${esc(r.name)}</div>
+        <div class="recycler-meta">
+          ${r.cpcbRegistered ? '<span class="badge">CPCB VERIFIED</span>' : ''}
+          ${t('col.msg.accepts')} ${esc((r.materials || []).join(', '))}
+        </div>
+        <div class="recycler-meta">${coverage}</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="distance-pill">${r.distance.toFixed(1)} km</div>
+        <button class="btn btn-ghost" data-idx="${i}" style="margin-top:6px; padding:6px 14px; font-size:12px;">${t('common.select')}</button>
+      </div>
+    `;
+    card.querySelector('button').addEventListener('click', () => selectRecycler(r));
+    listEl.appendChild(card);
+  });
+
+  showMap(results[0]);
+}
+
+/* ============================================================
+   9. MAP
+   ============================================================ */
+function showMap(topRecycler){
+  const mapEl = document.getElementById('map');
+  mapEl.classList.remove('hidden');
+
+  if (!map){
+    map = L.map('map').setView([userLoc.lat, userLoc.lng], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+  }
+  if (userMarker) map.removeLayer(userMarker);
+  if (recyclerMarker) map.removeLayer(recyclerMarker);
+  if (routeLine) map.removeLayer(routeLine);
+
+  userMarker = L.marker([userLoc.lat, userLoc.lng]).addTo(map).bindPopup('You');
+  recyclerMarker = L.marker([topRecycler.lat, topRecycler.lng]).addTo(map).bindPopup(topRecycler.name);
+  routeLine = L.polyline(
+    [[userLoc.lat, userLoc.lng],[topRecycler.lat, topRecycler.lng]],
+    { color: '#4ADE60', weight: 3, dashArray: '6 6' }
+  ).addTo(map);
+
+  map.fitBounds(routeLine.getBounds(), { padding: [30,30] });
+  setTimeout(() => map.invalidateSize(), 200);
+}
+
+/* ============================================================
+   10. SELECT RECYCLER
+   ============================================================ */
+function selectRecycler(r){
+  selectedRecycler = r;
+  document.getElementById('confirmPanel').classList.remove('hidden');
+  document.getElementById('confirmPanel').scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+/* ============================================================
+   11. CONFIRM PICKUP → SAVE TRANSACTION + QR
+   NOTE: we now write `collectorId` onto the transaction so this
+   collector can subscribe to it and receive the recycler's
+   confirmation photos in real time.
+   ============================================================ */
+document.getElementById('confirmBtn').addEventListener('click', async () => {
+  if (!selectedRecycler || !currentRequest){
+    alert(t('col.msg.selectRecyclerFirst'));
+    return;
+  }
+  const date = document.getElementById('pickupDate').value || 'To be confirmed';
+  const time = document.getElementById('pickupTime').value || 'To be confirmed';
+  const txnId = 'SS' + Date.now().toString().slice(-8);
+
+  // Give still-in-flight photo uploads a moment to finish so the
+  // transaction gets the photo URLs on the first write. If they're already
+  // done (or failed) this resolves instantly.
+  if (pendingPhotoUpload){
+    try{ await pendingPhotoUpload; }catch(e){ /* already logged */ }
+  }
+
+  try{
+    await db.collection('transactions').add({
+      txnId,
+      requestId: currentRequest.id,
+      collectorId: currentUser.uid,        // needed for the live listener
+      recyclerId: selectedRecycler.id,
+      recyclerName: selectedRecycler.name,
+      // summary fields (kept so recycler-dashboard.html keeps working)
+      material: currentRequest.material,
+      quantity: currentRequest.quantity,
+      price: currentRequest.price,
+      // per-item breakdown
+      items: currentRequest.items,
+      scrapPhotoUrl: currentRequest.photoUrl || null,
+      scrapPhotoUrls: currentRequest.photoUrls || [],
+      pickupDate: date,
+      pickupTime: time,
+      status: 'Collected',
+      confirmationPhotos: [],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    document.getElementById('qrPanel').classList.remove('hidden');
+    document.getElementById('qrcode').innerHTML = '';
+    // Keep the QR payload compact — many items would overflow the QR capacity.
+    const compactItems = currentRequest.items.map(i => i.material + 'x' + i.quantity).join(', ');
+    try{
+      new QRCode(document.getElementById('qrcode'), {
+        text: JSON.stringify({ txnId, items: compactItems, kg: currentRequest.quantity, total: currentRequest.price, recycler: selectedRecycler.name }),
+        width: 140, height: 140
+      });
+    }catch(qrErr){
+      document.getElementById('qrcode').innerHTML = '';
+      new QRCode(document.getElementById('qrcode'), { text: txnId, width: 140, height: 140 });
+    }
+    document.getElementById('txnId').textContent = t('col.slip.txn') + txnId;
+
+    setStep('Collected');
+  }catch(e){
+    alert(t('col.msg.confirmFail') + ' ' + e.message);
+  }
+});
+
+/* ============================================================
+   12. STATUS TRACKER
+   ============================================================ */
+const STEP_ORDER = ['Collected','Delivered','Processing','Recycled'];
+function setStep(current){
+  const idx = STEP_ORDER.indexOf(current);
+  document.querySelectorAll('#tracker .tstep').forEach((el, i) => {
+    el.classList.toggle('done', i <= idx);
+    el.classList.toggle('active', i === idx);
+  });
+}
+setStep('Collected');
+</script>
+
+</body>
+</html>

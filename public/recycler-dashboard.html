@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ScrapSetu — Recycler Dashboard</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg: white;
+    --panel: #f5f5f5;
+    --panel-hi: #EDF3EC;
+    --ink: #111827;
+    --ink-soft: #4B5563;
+    --forest: #15803D;
+    --forest-deep: #F2FAEC;
+    --copper: #4ADE60;
+    --line: #E5E7EB;
+    --good: #4ADE60;
+    --green-deep: #123317;
+    --radius-panel: 8px;
+    --radius-pill: 999px;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background: var(--bg); color: var(--ink);
+    font-family:'Inter', sans-serif; line-height:1.5;
+    background-image:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(74,222,96,0.08), transparent 60%);
+  }
+  h1,h2{ font-family:'Anton', sans-serif; font-weight:400; color: var(--ink); margin:0 0 8px 0; text-transform:uppercase; letter-spacing:0.01em;}
+  a{ color: var(--forest); }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 0 40px; height:64px;
+    background: green;
+    box-shadow: 0 2px 18px rgba(0,0,0,0.5);
+    position: sticky; top:0; z-index: 20;
+  }
+  .brand-name{ font-family:'Anton', sans-serif; font-weight:400; font-size:24px; color: #0A1B0C; text-transform:uppercase; letter-spacing:0.03em;}
+  .topbar-right{ display:flex; align-items:center; gap:14px; }
+  .lang-select{
+    background: rgba(10,27,12,0.9);
+    color: #EFFFED;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-family:'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .lang-select option{ background:#0A1B0C; color:#EFFFED; }
+  #loggedInAs{ font-size:13px; color:#0A1B0C; font-weight:700; }
+  #logoutBtn{ background:#0A1B0C !important; color: white; border:1px solid #0A1B0C !important; }
+
+  .wrap{ max-width: 900px; margin:0 auto; padding: 40px; }
+  .panel{
+    background: var(--panel); border:1px solid var(--line);
+    border-radius: var(--radius-panel); padding: 28px; margin-bottom:24px;
+  }
+  .sub{ color: var(--ink-soft); font-size:13px; margin-bottom:18px; }
+
+  input[type=text], input[type=email], input[type=password]{
+    width:100%; padding:11px 12px; border:1px solid var(--line);
+    border-radius:4px; font-family:'Inter'; font-size:14px; background:#E9F2E4; color:#10190F;
+    margin-bottom:10px;
+  }
+  input[type=text]:focus, input[type=email]:focus, input[type=password]:focus{
+    outline:none; border-color: var(--forest);
+    box-shadow: 0 0 0 3px rgba(74,222,96,0.18);
+  }
+
+  .job-card{
+    border-top:1px solid var(--line); padding: 18px 0;
+    display:flex; justify-content:space-between; align-items:flex-start; gap:16px;
+  }
+  .job-card:first-of-type{ border-top:none; }
+  .job-info{ flex:1; min-width:0; }
+  .job-title{ font-weight:600; font-size:15px; color: var(--ink); display:flex; align-items:center; gap:10px; }
+  .scrap-photo-link{ flex:0 0 auto; display:block; }
+  .scrap-photo-link img{
+    width:44px; height:44px; object-fit:cover; border-radius:6px;
+    border:1px solid var(--line); display:block;
+  }
+  .scrap-verify-row{ margin: 6px 0 2px 0; }
+  .btn-verify{
+    font-size:11px; font-weight:700; letter-spacing:0.02em; text-transform:uppercase;
+    padding:5px 12px; border-radius:999px; border:1px solid var(--forest);
+    background:transparent; color: var(--forest); cursor:pointer;
+  }
+  .btn-verify:hover{ background: var(--forest); color:white; }
+  .btn-verify[disabled]{ opacity:0.6; cursor:not-allowed; }
+  .verified-badge{
+    font-size:11px; font-weight:700; letter-spacing:0.02em;
+    color: var(--good); text-transform:uppercase;
+  }
+  .job-meta{ font-size:12px; color: var(--ink-soft); margin-top:4px; }
+  .job-meta span{ margin-right:12px; }
+
+  .job-side{ display:flex; flex-direction:column; align-items:flex-end; gap:10px; min-width:190px; }
+
+  .status-pill{
+    font-size:11px; font-weight:700; letter-spacing:0.02em;
+    padding: 4px 10px; border-radius: var(--radius-pill);
+    background: var(--green-deep); color: var(--good); white-space:nowrap;
+  }
+  .btn{
+    padding:9px 16px; border-radius: var(--radius-pill); border:none;
+    font-family:'Inter'; font-weight:700; font-size:13px; cursor:pointer;
+    background: green; color: white; white-space:nowrap;
+    text-transform:uppercase; letter-spacing:0.03em;
+  }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn[disabled]{ opacity:0.4; cursor:not-allowed; }
+
+  .job-actions{ display:flex; align-items:center; gap:8px; }
+
+ .photo-pick{
+    display:inline-flex; align-items:center; justify-content:center;
+    padding:9px 16px; border-radius: var(--radius-pill); border:none;
+    font-family:'Inter'; font-weight:700; font-size:13px; cursor:pointer;
+    background: green; color: white; white-space:nowrap;
+    text-transform:uppercase; letter-spacing:0.03em;
+    user-select:none;
+    transition: filter .12s ease;
+  }
+  .photo-pick:hover{ filter:brightness(1.08); }
+  .photo-pick.has-photo{ background: var(--green-deep); color: var(--good); }
+
+  .pending-photo{
+    position:relative; margin-top:6px;
+    border:1px solid var(--line); border-radius:8px;
+    overflow:hidden; width:110px;
+  }
+  .pending-photo img{ width:100%; height:80px; object-fit:cover; display:block; }
+  .remove-photo{
+    position:absolute; top:4px; right:4px;
+    width:22px; height:22px; border-radius:50%;
+    border:none; background: rgba(0,0,0,0.7); color:#fff;
+    font-size:14px; line-height:1; cursor:pointer; padding:0;
+  }
+
+  .proof-strip{
+    display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;
+  }
+  .proof-thumb{
+    display:block; text-decoration:none;
+    border:1px solid var(--line); border-radius:6px; overflow:hidden;
+    background:#0D160C; width:70px;
+    transition: border-color .15s ease;
+  }
+  .proof-thumb:hover{ border-color: var(--forest); }
+  .proof-thumb img{ width:100%; height:52px; object-fit:cover; display:block; }
+  .proof-thumb span{ display:block; font-size:9.5px; color: var(--ink-soft); padding:3px 5px; text-align:center; }
+
+  .empty{ color: var(--ink-soft); font-size:13px; padding: 10px 0; }
+  .status-msg{ font-size:13px; margin-top:10px; }
+  .status-msg.ok{ color: var(--good); }
+  .status-msg.err{ color: #FF6B6B; }
+  .hidden{ display:none !important; }
+
+  .checkbox-row{ font-size:13px; margin-bottom:14px; }
+  .checkbox-row label{ margin-right:14px; }
+
+  footer{ text-align:center; padding:30px; color: var(--ink-soft); font-size:12px; border-top:1px solid var(--line); }
+
+  /* ---------- Multi-item breakdown ---------- */
+  .items-breakdown{ margin-top:10px; border:1px solid var(--line); border-radius:8px; background:#fff; padding:6px 12px; }
+  .bd-row{ padding:8px 0; border-bottom:1px solid var(--line); }
+  .bd-name{ font-weight:600; font-size:13px; color: var(--ink); }
+  .bd-meta{ font-size:12px; color: var(--ink-soft); margin-top:2px; }
+  .bd-meta strong{ color: var(--ink); }
+  .bd-photos{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .bd-photos img{ width:44px; height:44px; object-fit:cover; border-radius:5px; border:1px solid var(--line); display:block; }
+  .bd-total{ display:flex; justify-content:space-between; padding:8px 0 4px 0; font-size:13px; font-weight:700; }
+  .bd-total strong{ color: var(--forest); font-size:15px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="index.html" style="text-decoration:none;">
+    <div class="brand-name">Scrapsetu</div>
+  </a>
+  <div class="topbar-right">
+    <span id="loggedInAs"></span>
+    <select class="lang-select" id="langSelect" aria-label="Language">
+      <option value="en">English</option>
+      <option value="hi">हिन्दी</option>
+      <option value="mr">मराठी</option>
+    </select>
+    <div id="logoutWrap" class="hidden" style="display:flex; align-items:center; gap:14px;">
+      <button class="btn" id="logoutBtn" data-i18n="common.logout">Log out</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="panel" id="loginPanel" style="max-width:420px; margin:40px auto;">
+    <h2 id="loginHeading" style="text-align:center;" data-i18n="rec.login.heading">Recycler login</h2>
+    <div class="sub" id="loginSub" data-i18n="rec.login.sub">Log in to see only the pickups assigned to you.</div>
+
+    <div id="loginStep">
+      <input type="email" id="emailInput" data-i18n-placeholder="rec.email.ph" placeholder="Email" />
+      <input type="password" id="passwordInput" data-i18n-placeholder="rec.password.ph" placeholder="Password" />
+      <button class="btn" id="loginBtn" style="margin-top:12px;" data-i18n="rec.login.btn">Log in</button>
+      <div class="status-msg" id="loginStatus"></div>
+      <div style="margin-top:14px; font-size:13px;">
+        <span data-i18n="rec.newRecycler">New recycler?</span>
+        <a href="#" id="showRegisterLink" data-i18n="rec.registerLink">Register your business</a>
+      </div>
+    </div>
+
+    <div id="registerStep" class="hidden">
+      <input type="text" id="regName" data-i18n-placeholder="rec.reg.name.ph" placeholder="Business name" />
+      <input type="email" id="regEmail" data-i18n-placeholder="rec.reg.email.ph" placeholder="Email" />
+      <input type="password" id="regPassword" data-i18n-placeholder="rec.reg.password.ph" placeholder="Password (min. 6 characters)" />
+
+      <div style="font-size:13px; font-weight:600; margin-bottom:8px; color:var(--forest);" data-i18n="rec.reg.materials">Materials accepted</div>
+      <div class="checkbox-row">
+        <label><input type="checkbox" value="PCB" class="matCheck"> PCB</label>
+        <label><input type="checkbox" value="Copper" class="matCheck"> Copper</label>
+        <label><input type="checkbox" value="Aluminium" class="matCheck"> Aluminium</label>
+        <label><input type="checkbox" value="Batteries" class="matCheck"> Batteries</label>
+        <label><input type="checkbox" value="Plastic" class="matCheck"> Plastic</label>
+      </div>
+
+      <input type="text" id="regLocation" data-i18n-placeholder="rec.reg.location.ph" placeholder="Click 'Detect location' below" readonly />
+      <button class="btn" id="detectRegLocBtn" type="button" style="background:transparent; color:var(--forest); border:1px solid var(--line);" data-i18n="rec.reg.detect">Detect location</button>
+
+      <button class="btn" id="registerBtn" style="margin-top:14px; display:block;" data-i18n="rec.reg.btn">Create recycler account</button>
+      <div class="status-msg" id="registerStatus"></div>
+      <div style="margin-top:14px; font-size:13px;">
+        <span data-i18n="rec.alreadyReg">Already registered?</span>
+        <a href="#" id="showLoginLink" data-i18n="rec.loginLink">Log in</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="dashboardPanels" class="hidden panel">
+    <h2 data-i18n="rec.dash.title">Your pickups</h2>
+    <div class="sub" data-i18n="rec.dash.sub">Update the status as each pickup moves through your process. Attach a photo as proof for the collector.</div>
+    <div id="jobList">
+      <div class="empty" data-i18n="rec.nojobs">No pickups assigned yet.</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="i18n.js"></script>
+
+<script>
+/* ============================================================
+   BACKEND URL — used for the /upload route (Cloudinary) instead
+   of Firebase Storage. Matches the same constant in collector.html.
+   ============================================================ */
+const BACKEND_URL = "http://localhost:3001";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyABsK4MK2E392dAMOkfkWYXrToAoE_sqo8",
+  authDomain: "scrapsetu-92ce6.firebaseapp.com",
+  projectId: "scrapsetu-92ce6",
+  storageBucket: "scrapsetu-92ce6.firebasestorage.app",
+  messagingSenderId: "727088751474",
+  appId: "1:727088751474:web:70703aa38f20ea44e1b3eb",
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+const storage = firebase.storage();
+
+const STEP_ORDER = ['Collected', 'Delivered', 'Processing', 'Recycled'];
+let unsubscribeJobs = null;
+let currentRecyclerDoc = null;
+let lastJobs = [];
+
+/* ============================================================
+   PENDING PHOTO STORAGE (survives re-renders)
+   docId -> File
+   docId -> object URL for the preview
+   ============================================================ */
+const pendingPhotos = new Map();
+const previewURLs = new Map();
+
+/* ============================================================
+   TOGGLE BETWEEN LOGIN AND REGISTER FORMS
+   ============================================================ */
+document.getElementById('showRegisterLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('loginStep').classList.add('hidden');
+  document.getElementById('registerStep').classList.remove('hidden');
+  document.getElementById('loginHeading').textContent = t('rec.reg.heading');
+  document.getElementById('loginSub').textContent = t('rec.reg.sub');
+});
+document.getElementById('showLoginLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('registerStep').classList.add('hidden');
+  document.getElementById('loginStep').classList.remove('hidden');
+  document.getElementById('loginHeading').textContent = t('rec.login.heading');
+  document.getElementById('loginSub').textContent = t('rec.login.sub');
+});
+
+/* ============================================================
+   REGISTER
+   ============================================================ */
+let regLocation = null;
+
+document.getElementById('detectRegLocBtn').addEventListener('click', () => {
+  const statusEl = document.getElementById('registerStatus');
+  if (!navigator.geolocation){
+    statusEl.textContent = t('rec.err.locUnsupported');
+    statusEl.className = 'status-msg err';
+    return;
+  }
+  statusEl.textContent = t('rec.msg.detecting');
+  statusEl.className = 'status-msg';
+  navigator.geolocation.getCurrentPosition((pos) => {
+    regLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    document.getElementById('regLocation').value = `${regLocation.lat.toFixed(4)}, ${regLocation.lng.toFixed(4)}`;
+    statusEl.textContent = t('rec.msg.locCaptured');
+    statusEl.className = 'status-msg ok';
+  }, () => {
+    statusEl.textContent = t('rec.err.locDenied');
+    statusEl.className = 'status-msg err';
+  });
+});
+
+document.getElementById('registerBtn').addEventListener('click', async () => {
+  const statusEl = document.getElementById('registerStatus');
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const materials = Array.from(document.querySelectorAll('.matCheck:checked')).map(cb => cb.value);
+
+  if (!name || !email || password.length < 6 || materials.length === 0){
+    statusEl.textContent = t('rec.msg.fillAll');
+    statusEl.className = 'status-msg err';
+    return;
+  }
+
+  statusEl.textContent = t('rec.msg.creating');
+  statusEl.className = 'status-msg';
+
+  try{
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    await db.collection('recyclers').doc(cred.user.uid).set({
+      name, email, materials,
+      cpcbRegistered: false,
+      lat: regLocation ? regLocation.lat : null,
+      lng: regLocation ? regLocation.lng : null
+    });
+  }catch(e){
+    statusEl.textContent = t('rec.msg.createFail') + ' ' + e.message;
+    statusEl.className = 'status-msg err';
+  }
+});
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const statusEl = document.getElementById('loginStatus');
+  const email = document.getElementById('emailInput').value.trim();
+  const password = document.getElementById('passwordInput').value;
+
+  if (!email || !password){
+    statusEl.textContent = t('rec.msg.loginBoth');
+    statusEl.className = 'status-msg err';
+    return;
+  }
+  statusEl.textContent = t('rec.msg.loggingIn');
+  statusEl.className = 'status-msg';
+
+  try{
+    await auth.signInWithEmailAndPassword(email, password);
+  }catch(e){
+    statusEl.textContent = t('rec.msg.loginFail') + ' ' + e.message;
+    statusEl.className = 'status-msg err';
+  }
+});
+
+/* ============================================================
+   LOAD PROFILE + SHOW DASHBOARD
+   Also acts as a role gate: any valid Firebase account that
+   lacks a `recyclers/{uid}` doc is refused (e.g. a collector
+   trying to sign in here).
+   ============================================================ */
+async function loadRecyclerProfile(uid){
+  let doc;
+  try{
+    doc = await db.collection('recyclers').doc(uid).get();
+  }catch(e){
+    document.getElementById('loginStatus').textContent =
+      t('rec.msg.loginFail') + ' ' + e.message;
+    document.getElementById('loginStatus').className = 'status-msg err';
+    await auth.signOut();
+    return;
+  }
+
+  if (!doc.exists){
+    // Try to give a precise reason. If the account has a
+    // `collectors/{uid}` doc, it's a collector who wandered onto
+    // the recycler page.
+    let msg = t('rec.msg.noProfile');
+    try{
+      const collectorDoc = await db.collection('collectors').doc(uid).get();
+      if (collectorDoc.exists) msg = t('rec.msg.notRecycler');
+    }catch(e){ /* rules may deny this read — generic message is fine */ }
+
+    document.getElementById('loginStatus').textContent = msg;
+    document.getElementById('loginStatus').className = 'status-msg err';
+    await auth.signOut();
+    return;
+  }
+
+  currentRecyclerDoc = { id: doc.id, ...doc.data() };
+  showDashboard();
+}
+
+function showDashboard(){
+  document.getElementById('loginPanel').classList.add('hidden');
+  document.getElementById('dashboardPanels').classList.remove('hidden');
+  document.getElementById('logoutWrap').classList.remove('hidden');
+  document.getElementById('loggedInAs').textContent = currentRecyclerDoc.name;
+  watchJobs(currentRecyclerDoc.id);
+}
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  if (unsubscribeJobs) unsubscribeJobs();
+  await auth.signOut();
+  currentRecyclerDoc = null;
+  lastJobs = [];
+  pendingPhotos.clear();
+  previewURLs.forEach(u => URL.revokeObjectURL(u));
+  previewURLs.clear();
+  document.getElementById('loginPanel').classList.remove('hidden');
+  document.getElementById('dashboardPanels').classList.add('hidden');
+  document.getElementById('logoutWrap').classList.add('hidden');
+  document.getElementById('emailInput').value = '';
+  document.getElementById('passwordInput').value = '';
+});
+
+/* ============================================================
+   JOBS — real-time list
+   ============================================================ */
+function watchJobs(recyclerId){
+  unsubscribeJobs = db.collection('transactions')
+    .where('recyclerId', '==', recyclerId)
+    .onSnapshot((snapshot) => {
+      lastJobs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderJobs();
+    }, (err) => {
+      document.getElementById('jobList').innerHTML =
+        `<div class="empty">${err.message}</div>`;
+    });
+}
+
+/* ------------------------------------------------------------
+   Render every job card, incl. the photo picker + proof strip
+   ------------------------------------------------------------ */
+function escHtml(x){
+  return String(x == null ? '' : x).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+const LOCAL_LT = {
+  en:{ total:'Total', items:'items' },
+  hi:{ total:'कुल', items:'आइटम' },
+  mr:{ total:'एकूण', items:'वस्तू' }
+};
+function LT(k){
+  const l = (window.getLang && getLang()) || 'en';
+  return (LOCAL_LT[l] && LOCAL_LT[l][k]) || LOCAL_LT.en[k] || k;
+}
+
+function renderJobs(){
+  const listEl = document.getElementById('jobList');
+  if (!lastJobs.length){
+    listEl.innerHTML = `<div class="empty">${t('rec.nojobs')}</div>`;
+    return;
+  }
+
+  listEl.innerHTML = '';
+
+  lastJobs.forEach(job => {
+    const currentIdx = STEP_ORDER.indexOf(job.status);
+    const nextStep = STEP_ORDER[currentIdx + 1];
+    const photos = job.confirmationPhotos || [];
+
+    // Existing proof photos on this job
+    const proofThumbs = photos.map(p => `
+      <a href="${p.url}" target="_blank" rel="noopener" class="proof-thumb"
+         title="${t('step.' + (p.status || 'Collected'))}">
+        <img src="${p.url}" alt="" loading="lazy">
+        <span>${t('step.' + (p.status || 'Collected'))}</span>
+      </a>`).join('');
+
+    // Photo the collector uploaded of the scrap itself (separate from
+    // the recycler's own confirmation proof photos above)
+    // Multi-item jobs carry job.items[]; older single-item jobs don't.
+    const jobItems = (Array.isArray(job.items) && job.items.length) ? job.items : null;
+    const allScrapPhotos = (job.scrapPhotoUrls && job.scrapPhotoUrls.length)
+      ? job.scrapPhotoUrls
+      : (job.scrapPhotoUrl ? [job.scrapPhotoUrl] : []);
+
+    // First photo stays next to the title, like before
+    const scrapPhoto = allScrapPhotos.length ? `
+      <a href="${allScrapPhotos[0]}" target="_blank" rel="noopener" class="scrap-photo-link" title="Collector's photo">
+        <img src="${allScrapPhotos[0]}" alt="" loading="lazy">
+      </a>` : '';
+
+    // Per-item breakdown: material, name, kg, price and that item's photos
+    const itemsBreakdown = jobItems ? `
+      <div class="items-breakdown">
+        ${jobItems.map((it, n) => `
+          <div class="bd-row">
+            <div class="bd-main">
+              <div class="bd-name">${n + 1}. ${escHtml(t('col.mat.' + it.material))}${it.itemName ? ' (' + escHtml(it.itemName) + ')' : ''}</div>
+              <div class="bd-meta">${it.quantity} kg × ₹${it.rate} — <strong>₹${Number(it.price).toLocaleString('en-IN')}</strong></div>
+              ${(it.photoUrls && it.photoUrls.length) ? `<div class="bd-photos">${it.photoUrls.map(u =>
+                `<a href="${u}" target="_blank" rel="noopener"><img src="${u}" alt="" loading="lazy"></a>`).join('')}</div>` : ''}
+            </div>
+          </div>`).join('')}
+        <div class="bd-total"><span>${LT('total')}</span><strong>₹${Number(job.price).toLocaleString('en-IN')}</strong></div>
+      </div>` : '';
+
+    const scrapVerify = allScrapPhotos.length ? (
+      job.photoVerified
+        ? `<span class="verified-badge">✓ ${t('rec.photo.verified')}</span>`
+        : `<button type="button" class="btn-verify" data-verify-id="${job.id}">${t('rec.photo.verify')}</button>`
+    ) : '';
+
+    const card = document.createElement('div');
+    card.className = 'job-card';
+
+    card.innerHTML = `
+      <div class="job-info">
+        <div class="job-title">
+          ${scrapPhoto}
+          <span>${jobItems ? jobItems.length + ' ' + LT('items') + ' · ' : ''}${escHtml(job.material)} · ${job.quantity} kg — ₹${Number(job.price).toLocaleString('en-IN')}</span>
+        </div>
+        ${itemsBreakdown}
+        <div class="job-meta">
+          <span>Txn: ${job.txnId}</span>
+          <span>${job.pickupDate || ''} ${job.pickupTime || ''}</span>
+        </div>
+        ${scrapVerify ? `<div class="scrap-verify-row">${scrapVerify}</div>` : ''}
+        ${proofThumbs ? `<div class="proof-strip">${proofThumbs}</div>` : ''}
+      </div>
+
+      <div class="job-side">
+        <span class="status-pill">${t('step.' + job.status)}</span>
+        ${nextStep ? `
+          <div class="job-actions">
+       <label class="photo-pick" title="${t('rec.photo.hint')}" data-pick-for="${job.id}">
+              <span>Photo Upload</span>
+              <input type="file" accept="image/*" hidden data-photo-input="${job.id}">
+            </label>
+            </label>
+            <button class="btn" data-id="${job.id}" data-next="${nextStep}">
+              ${t('rec.mark.' + nextStep)}
+            </button>
+          </div>
+          <div class="pending-photo hidden" data-pending-for="${job.id}">
+            <img alt="">
+            <button type="button" class="remove-photo" data-remove-for="${job.id}">×</button>
+          </div>
+        ` : `<button class="btn" disabled>${t('rec.complete')}</button>`}
+      </div>
+    `;
+
+    listEl.appendChild(card);
+  });
+
+  /* ---- wire up the file pickers ---- */
+  listEl.querySelectorAll('input[data-photo-input]').forEach(input => {
+    input.addEventListener('change', (e) => {
+      const docId = e.target.dataset.photoInput;
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Clean any previous preview for this job
+      const prev = previewURLs.get(docId);
+      if (prev) URL.revokeObjectURL(prev);
+
+      pendingPhotos.set(docId, file);
+      previewURLs.set(docId, URL.createObjectURL(file));
+      applyPendingPreview(docId);
+    });
+  });
+
+  /* ---- wire up remove-photo buttons ---- */
+  listEl.querySelectorAll('button[data-remove-for]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const docId = btn.dataset.removeFor;
+      const prev = previewURLs.get(docId);
+      if (prev) URL.revokeObjectURL(prev);
+      previewURLs.delete(docId);
+      pendingPhotos.delete(docId);
+      applyPendingPreview(docId);
+    });
+  });
+
+  /* ---- wire up advance-status buttons ---- */
+  listEl.querySelectorAll('button[data-next]').forEach(btn => {
+    btn.addEventListener('click', () => advanceStatus(btn.dataset.id, btn.dataset.next));
+  });
+
+  /* ---- wire up verify-photo buttons ---- */
+  listEl.querySelectorAll('button[data-verify-id]').forEach(btn => {
+    btn.addEventListener('click', () => verifyScrapPhoto(btn.dataset.verifyId, btn));
+  });
+
+  /* ---- re-apply any pending previews that survived a re-render ---- */
+  pendingPhotos.forEach((_, docId) => applyPendingPreview(docId));
+}
+
+/* Show / hide the little thumbnail next to a job */
+function applyPendingPreview(docId){
+  const wrap = document.querySelector(`[data-pending-for="${docId}"]`);
+  const pick = document.querySelector(`[data-pick-for="${docId}"]`);
+  if (!wrap) return;
+
+  const url = previewURLs.get(docId);
+  if (url){
+    wrap.classList.remove('hidden');
+    wrap.querySelector('img').src = url;
+    if (pick) pick.classList.add('has-photo');
+  } else {
+    wrap.classList.add('hidden');
+    wrap.querySelector('img').src = '';
+    if (pick) pick.classList.remove('has-photo');
+  }
+}
+
+/* ============================================================
+   VERIFY COLLECTOR'S SCRAP PHOTO
+   Lets the recycler confirm the item matches what the collector
+   claimed before moving the job forward.
+   ============================================================ */
+async function verifyScrapPhoto(txnDocId, btn){
+  if (btn){ btn.disabled = true; btn.textContent = '…'; }
+  try{
+    await db.collection('transactions').doc(txnDocId).update({
+      photoVerified: true,
+      photoVerifiedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // The live onSnapshot listener will re-render this as the ✓ badge.
+  }catch(e){
+    alert('Could not mark photo verified: ' + e.message);
+    if (btn){ btn.disabled = false; btn.textContent = t('rec.photo.verify'); }
+  }
+}
+
+/* ============================================================
+   UPLOAD CONFIRMATION PHOTO — via backend → Cloudinary
+   (previously went straight to Firebase Storage)
+   ============================================================ */
+async function uploadConfirmationPhoto(txnDocId, file){
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await fetch(`${BACKEND_URL}/upload`, { method: 'POST', body: formData });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Upload failed.');
+  return data.url;
+}
+
+/* ============================================================
+   ADVANCE STATUS (+ upload the photo if one is attached)
+   ============================================================ */
+async function advanceStatus(txnDocId, nextStatus){
+  const btn = document.querySelector(`button[data-id="${txnDocId}"][data-next="${nextStatus}"]`);
+  const originalLabel = btn ? btn.textContent : '';
+  if (btn){
+    btn.disabled = true;
+    btn.textContent = t('rec.photo.uploading');
+  }
+
+  try{
+    const file = pendingPhotos.get(txnDocId);
+    const docRef = db.collection('transactions').doc(txnDocId);
+    const update = { status: nextStatus };
+
+    if (file){
+      const url = await uploadConfirmationPhoto(txnDocId, file);
+      update.confirmationPhotos = firebase.firestore.FieldValue.arrayUnion({
+        url,
+        status: nextStatus,
+        uploadedAt: new Date().toISOString()
+      });
+    }
+
+    await docRef.update(update);
+
+    // Clean up local pending state
+    const prev = previewURLs.get(txnDocId);
+    if (prev) URL.revokeObjectURL(prev);
+    previewURLs.delete(txnDocId);
+    pendingPhotos.delete(txnDocId);
+
+    // onSnapshot will re-render the list for us
+  }catch(e){
+    alert(t('rec.err.update') + ' ' + e.message);
+    if (btn){
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    }
+  }
+}
+
+/* ============================================================
+   Re-render on language change
+   ============================================================ */
+window.addEventListener('languagechange', () => {
+  renderJobs();
+  const regVisible = !document.getElementById('registerStep').classList.contains('hidden');
+  document.getElementById('loginHeading').textContent =
+    regVisible ? t('rec.reg.heading') : t('rec.login.heading');
+  document.getElementById('loginSub').textContent =
+    regVisible ? t('rec.reg.sub') : t('rec.login.sub');
+});
+
+/* ============================================================
+   Stay logged in across refreshes
+   ============================================================ */
+auth.onAuthStateChanged((user) => {
+  if (user && !currentRecyclerDoc){
+    loadRecyclerProfile(user.uid);
+  }
+});
+</script>
+
+</body>
+</html>
