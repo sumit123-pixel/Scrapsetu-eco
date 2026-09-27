@@ -23,6 +23,7 @@ const upload = multer({
 });
 
 app.use(cors());
+app.use(express.static(require('path').join(__dirname, 'public')));
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY?.trim();
 // Groq's current (and only) vision-capable model, per console.groq.com/docs/vision.
